@@ -1,0 +1,120 @@
+# Database
+# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+import os
+from crypt_file_config.class_file import FileConfig
+
+# DEBUG = True
+ALLOWED_HOSTS = ["localhost", "web_tva", "10.103.156.117]
+
+SECRET_KEY = "!QAZ"WSX#$%&¡?*[:;"
+
+DEBUG = 1
+
+# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
+# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
+# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+
+
+#parametros para https
+#SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+#SECURE_SSL_REDIRECT = True
+
+#SESSION_COOKIE_SECURE = True
+
+#CSRF_COOKIE_SECURE = True
+
+
+MEDIA_ROOT ="/tmp/"
+
+system_config = FileConfig()
+config = system_config.get_key_value("local_setting")
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": config['database']['name'],
+        # "NAME": "prueba3",
+        "USER": config['database']['user'],
+        "PASSWORD": config['database']['password'],
+        "HOST": config['database']['host'],
+        "PORT": "3306",
+    }
+}
+
+# PROJECT_ROOT = "/var/www/html/web_tva"
+# STATIC_ROOT = "/var/www/html/web_tva"
+
+# STATICFILES_DIRS = [os.path.join(STATIC_ROOT, "static")]
+
+PROJECT_ROOT = "/var/www/html/web_tva/"
+
+STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
+
+ADMIN_TOOLS_MENU = "menu.CustomMenu"
+ADMIN_TOOLS_INDEX_DASHBOARD = "dashboard.CustomIndexDashboard"
+ADMIN_TOOLS_APP_INDEX_DASHBOARD = "dashboard.CustomAppIndexDashboard"
+
+config_adfs = system_config.get_key_value("AUTH_ADFS")
+
+AUTH_ADFS = {
+    "SERVER": config_adfs['SERVER'],
+    "CLIENT_ID": config_adfs['CLIENT_ID'],
+    "RELYING_PARTY_ID": config_adfs['RELYING_PARTY_ID'],
+    "AUDIENCE": config_adfs['AUDIENCE'],
+    "CA_BUNDLE": '/opt/suite_intellignos/globalservs-com-chain.pem',  # <<<-- !!! DON'T DO THIS IN A PRODUCTION SETUP !!!
+    "CLAIM_MAPPING": config_adfs['CLAIM_MAPPING'],
+    'USERNAME_CLAIM': "email",
+    "CONFIG_RELOAD_INTERVAL": 0.1,
+    "TIME_SLEEP": 20,
+    "REDIRECT_CUSTOM": 'https://suite_stage.intellignos.com/oauth2/callback',
+}
+
+
+
+configuracion que va encriptada
+{
+    'AUTH_ADFS': {
+
+        'AUDIENCE': 'microsoft:identityserver:{relying party identifiers}',
+        'CA_BUNDLE': '/opt/suite_intellignos/ssl.pem',
+        'CLAIM_MAPPING': {
+            'last_name': 'family_name',
+            'name': 'given_name',
+            #"company": "company",
+            #"country": "country",
+            #"manager": "manager",
+        },
+        'CLIENT_ID': '{cliente id del aplication group}',
+        'CONFIG_RELOAD_INTERVAL': 0.1,
+        'RELYING_PARTY_ID': '{relying party identifiers}',
+        'SERVER': 'servidor-adfs',
+        'USERNAME_CLAIM': 'email'
+    },
+    'local_setting': {
+        'database': {
+            'host': '',
+            'name': 'dbmx_stage',
+            'password': 'Havas2019!',
+            'port': '3306',
+            'user': 'octavio_hatsembiller@ar-bue-srv2010'
+        }
+    },
+    'powerbi': {
+        'PBI_AUTHORITY': '',
+        'PBI_AUTHORITYHOSTURL': 'https://login.microsoftonline.com',
+        'PBI_BACKEND_URL': '/api/token',
+        'PBI_CLIENTID': '',
+        'PBI_EXPIRESION': '',
+        'PBI_PASSWORD': '',
+        'PBI_REFRESHTOKEN': '',
+        'PBI_RESOURCE': 'https://analysis.windows.net/powerbi/api',
+        'PBI_TENANT': '2759b131-64d9-4d32-bc8b-98372a85ebcb',
+        'PBI_TOKEN': {
+            'Authorization': 'Bearer '
+        },
+        'PBI_USERNAME': '',
+        'secret_key': ''
+    },
+ 'secret_key': '1A4882092B56E6560397646DE4FC6CE660E5E2C21A709ECCEB697BE5D997E42F'
+}
