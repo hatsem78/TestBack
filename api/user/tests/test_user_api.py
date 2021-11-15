@@ -30,6 +30,7 @@ class PublicUserApiTests(TestCase):
             'name': 'name',
         }
         res = self.client.post(CREATE_USER_URL, payload)
+        print(CREATE_USER_URL)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         user = get_user_model().objects.get(**res.data)
