@@ -5,14 +5,21 @@ from rest_framework import status
 
 from api.common import get_total_dolar, get_total_pesos
 from api.order.serializers import OrderPagSerializer, OrderSerializer
-from api.order_detail.serializers import OrderDetailPagSerializer, OrderDetailSerializer
+from api.order_detail.serializers import OrderDetailSerializer
 from core.models import Order, OrderDetail
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
+@permission_classes((IsAuthenticated,))
+@authentication_classes((JSONWebTokenAuthentication,))
 class OrderAdd(APIView):
     """
     List all Order, or create a new snippet.
     """
+    permission_classes = (IsAuthenticated, JSONWebTokenAuthentication)
+
     def get(self, request, format=None):
         snippets = Order.objects.all()
         serializer = OrderPagSerializer(snippets, many=True)
@@ -37,6 +44,7 @@ class OrderAdd(APIView):
 
 
 class OrderDetails(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def _getInstance(self, validated_data):
         """
@@ -97,11 +105,7 @@ class OrderDetails(APIView):
         order_detail = OrderDetail.objects.filter(order=id_order).values()
 
         for element in order_detail:
-
             OrderDetailSerializer.add_stock_prod(
                 element['product_id'],
                 element['cuantity']
             )
-
-
-

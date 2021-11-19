@@ -5,12 +5,19 @@ from rest_framework.views import APIView
 from rest_framework import status
 from api.product.serializers import ProductPagSerializer, ProductSerializer
 from core.models import Product
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
+@permission_classes((IsAuthenticated,))
+@authentication_classes((JSONWebTokenAuthentication,))
 class ProductAdd(APIView):
     """
     List all Product, or create a new snippet.
     """
+    permission_classes = (IsAuthenticated, JSONWebTokenAuthentication)
+
     def get(self, request, format=None):
         snippets = Product.objects.all()
         serializer = ProductPagSerializer(snippets, many=True)
@@ -31,6 +38,7 @@ class ProductAdd(APIView):
 
 
 class ProductDetail(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def _getInstance(self, validated_data):
         """

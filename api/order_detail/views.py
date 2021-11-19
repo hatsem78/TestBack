@@ -1,18 +1,22 @@
-from pprint import pprint
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-
 from api.common import get_check_stock, get_check_product_in_order
 from api.order_detail.serializers import OrderDetailPagSerializer, OrderDetailSerializer
 from core.models import OrderDetail
+from rest_framework.decorators import permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
+@permission_classes((IsAuthenticated,))
+@authentication_classes((JSONWebTokenAuthentication,))
 class OrderDetailadd(APIView):
+
     """
     List all OrderDetail, or create a new OrderDetail.
     """
+    permission_classes = (IsAuthenticated, JSONWebTokenAuthentication)
 
     def get(self, request, format=None):
         snippets = OrderDetail.objects.all()
@@ -58,6 +62,7 @@ class OrderDetailadd(APIView):
 
 
 class OrderDetailDetail(APIView):
+    permission_classes = (IsAuthenticated,)
 
     @staticmethod
     def _get_instance(validated_data):
