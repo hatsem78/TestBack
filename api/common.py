@@ -1,16 +1,20 @@
+import json
 from abc import ABC
+from pprint import pprint
+
+import requests
 from django.db.models import Func, IntegerField, CharField, QuerySet
 from rest_framework.pagination import PageNumberPagination
 import collections
 from datetime import datetime
 
-#para simulador
 from rest_framework.response import Response
 
+from api.product.serializers import ProductPagSerializer
+from core.models import OrderDetail, Product
 
 
 class PivoteDict:
-
     __datetime_format = '%b-%y'
     __datetime_format_out = ""
     __datetime_format_in = ""
@@ -21,7 +25,8 @@ class PivoteDict:
     __pivot = ''
     __field_order = ''
 
-    def __init__(self, data_info, group_by_info, date_format_out=None, order_list=None, field_order=None, pivot=None, date_format_in=None):
+    def __init__(self, data_info, group_by_info, date_format_out=None, order_list=None, field_order=None, pivot=None,
+                 date_format_in=None):
         self.data = data_info
         self.group_by = group_by_info
         self.datetime_format_out = '%b-%y' if date_format_out is None else date_format_out
@@ -118,7 +123,7 @@ class PivoteDict:
         for elemento in lista:
             if elemento['name_media'] is not None:
                 order_list[self.order.index(elemento['name_media'].lower())] = round(elemento['value'], 2)
-        if isinstance(group_by, (datetime, )):
+        if isinstance(group_by, (datetime,)):
             field_group = datetime.strptime(str(group_by), self.datetime_format_in).strftime(self.datetime_format_out)
 
         order_list.insert(0, field_group)
@@ -130,7 +135,7 @@ class PivoteDict:
         grouped = collections.defaultdict(list)
 
         for item in self.data:
-             grouped[item[self.group_by]].append(item)
+            grouped[item[self.group_by]].append(item)
 
         for model, group in grouped.items():
             self.order.index(item[self.field_order].lower())
@@ -154,7 +159,7 @@ class Pagination(PageNumberPagination):
                 "total": self.page.paginator.num_pages,
                 "per_page": self.request.query_params['per_page'],
                 "current_page": self.page.number,
-                "last_page": (self.page.paginator.page_range.stop-1),
+                "last_page": (self.page.paginator.page_range.stop - 1),
                 "next_page_url": self.get_next_link(),
                 'data': data,
             })
@@ -173,8 +178,8 @@ class Pagination(PageNumberPagination):
 
 
 class Round(Func):
-  function = 'ROUND'
-  arity = 2
+    function = 'ROUND'
+    arity = 2
 
 
 class Day(Func, ABC):
@@ -195,18 +200,49 @@ class Week(Func, ABC):
     output_field = IntegerField()
 
 
-# Para el simulador
-def create_adstock(df: pd.DataFrame, cols: np.array = None,
-                   ar_coeff: np.array = 0.8, logistic=False):
-    if cols is None:
-        cols = df.columns
-    for i in cols:
-        df[f'adstock_{i}'] = sm.tsa.filters.recursive_filter(df[i], ar_coeff)
-        if logistic:
-            df[f'adstock_{i}'] = sigmoid(df[f'adstock_{i}'] * 1e-6)
-    # df = df.drop(cols, axis=1)
-    return df
+def get_total_pesos(pk):
+    total = 0.0
+
+    order_detail = OrderDetail.objects.filter(order=pk)
+
+    order_detail = order_detail.values("cuantity", "product_id__name", "product_id__price")
+
+    for element in order_detail:
+        total += float(element["product_id__price"])
+
+    return round(total, 2)
 
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+def get_total_dolar(pk):
+    url = "https://www.dolarsi.com/api/api.php?type=valoresprincipales"
+
+    response = requests.get(url)
+
+    response = json.loads(response.content)
+
+    for element in response:
+        if "Dolar Blue" == element["casa"]["nombre"]:
+            float(element["casa"]["venta"].replace(",", "."))
+
+    dolar = [float(element["casa"]["venta"].replace(",", ".")) for element in response if
+             "Dolar Blue" == element["casa"]["nombre"]][0]
+
+    return round(dolar * get_total_pesos(pk), 2)
+
+
+def get_check_stock(pk):
+    prod = Product.objects.filter(id=int(pk)).values()
+
+    stock = prod[0]["stock"]
+
+    flag = True if stock > 0 else False
+
+    return flag
+
+
+def get_check_product_in_order(id_product):
+
+    order = OrderDetail.objects.filter(product=id_product)
+
+    return True if len(order) > 0 else False
+

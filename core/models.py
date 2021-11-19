@@ -42,18 +42,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
 
 
-class Tag(models.Model):
-    """Tag to be used for a recipe"""
-    name = models.CharField(max_length=255)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return self.name
-
-
 class Product(models.Model):
     """Save product"""
 
@@ -73,7 +61,16 @@ class Order(models.Model):
 
 
 class OrderDetail(models.Model):
+    id = models.AutoField(primary_key=True, help_text="Unique id")
     order = models.ForeignKey('Order', related_name='OrderDetailOrder', on_delete=models.CASCADE,
                               null=True)
     cuantity = models.IntegerField(default=0, help_text="Order detail  cuantity")
-    product = models.ManyToManyField(Product, help_text='Select a product for this order')
+    product = models.ForeignKey('Product', related_name='OrderDetailProduct', on_delete=models.CASCADE,
+                                null=True)
+
+    @property
+    def product_name(self):
+        return self.product.name
+
+    def product_price(self):
+        return self.product.price

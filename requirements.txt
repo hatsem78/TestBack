@@ -1,6 +1,10 @@
-django>=2.1.3
-djangorestframework>=3.9.1
+django
+djangorestframework
 psycopg2
 pycryptodomex
 pycrypto
+import
+requests
+flake8>=3.6.0
+
 
