@@ -41,9 +41,9 @@ class ProductApiTests(TestCase):
     def test_create_product_success(self):
         """Test creating using with a valid payload is successful"""
         payload = {
-          "name": "banana",
-          "price": 30.52,
-          "stock": 100
+            "name": "banana",
+            "price": 30.52,
+            "stock": 100
         }
 
         res = self.client.post(CREATE_USER_URL, payload)
@@ -56,21 +56,49 @@ class ProductApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_update_product_success(self):
-
-
+        """Test creating using with a valid payload is update successful"""
         payload = {
             "name": "banana",
             "price": 30.52,
             "stock": 100
         }
 
-        response = self.client.put("http://0.0.0.0:8010/api/product/update/1/", payload)
+        base_url = reverse(
+            "product:update",
+            kwargs={'pk': self.banana.pk}
+        )
+
+        response = self.client.put(base_url, payload, format='json')
 
         self.assertEqual('banana', response.data['name'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_product_deletey(self):
-        response = self.client.delete("http://0.0.0.0:8010/api/product/update/"+
-                                      str(self.pera.pk) + "/")
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    def test_update_product_not_found(self):
+        """Test creating using with a valid payload is not found"""
+        payload = {
+            "name": "banana",
+            "price": 30.52,
+            "stock": 100
+        }
 
+        base_url = reverse(
+            "product:update",
+            kwargs={'pk': 50}
+        )
+
+        response = self.client.put(base_url, payload, format='json')
+
+        resp = json.loads(response.content)
+
+        self.assertEqual(resp["detail"], 'Not found.')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_product_delete(self):
+        base_url = reverse(
+            "product:delete",
+            kwargs={'pk': self.pera.pk}
+        )
+
+        response = self.client.delete(base_url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

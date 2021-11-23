@@ -25,29 +25,35 @@ class OrderDetailadd(APIView):
 
     def post(self, request, format=None):
 
-        check_stock = get_check_stock(request.data["product"])
-
-        check_product = get_check_product_in_order(request.data["product"])
-
-        if check_product and "product" in request.data:
-            return Response(
-                {"msg-error": "El producto id: " + str(request.data["product"]) + " no se puede repetir en la orden"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if check_stock and "product" in request.data:
-            return Response(
-                {"msg-error": "Insuficiente stock"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         serializer = OrderDetailSerializer(data=request.data)
 
         try:
 
             if serializer.is_valid():
+
+                check_stock, stock = get_check_stock(request.data["product"])
+
+                check_product = get_check_product_in_order(request.data["product"])
+
+                if check_product and "product" in request.data:
+
+                    return Response(
+                        {"msg-error": "El producto id: " + str(
+                            request.data["product"]) + " no se puede repetir en la orden"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                if (not check_stock or stock < int(request.data["cuantity"])) and "product" in request.data:
+
+                    return Response(
+                        {"msg-error": "Insuficiente stock"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
                 serializer.save()
+
                 serializer.initial_data['id'] = serializer.instance.id
+
                 OrderDetailSerializer.delete_stock_prod(
                     id_producto=request.data['product'],
                     cuantity=request.data['cuantity']
@@ -97,33 +103,39 @@ class OrderDetailDetail(APIView):
 
     def put(self, request, pk, format=None):
 
-        check_stock = get_check_stock(request.data["product"])
-
-        check_product = get_check_product_in_order(request.data["product"])
-
-        if check_product and "product" in request.data:
-            return Response(
-                {"msg-error": "El producto id: " + str(request.data["product"]) + " no se puede repetir en la orden"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if check_stock and "product" in request.data:
-            return Response(
-                {"msg-error": "Insuficiente stock"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         object = self.get_object(pk)
 
         serializer = OrderDetailSerializer(object, data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+
+            check_stock, stock = get_check_stock(request.data["product"])
+
+            if (not check_stock or int(stock) < int(request.data["cuantity"])) and "product" in request.data:
+                return Response(
+                    {"msg-error": "Insuficiente stock"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            try:
+
+                serializer.save()
+            except Exception as error:
+                errors = error.args[0]
+                return Response({'error': errors},  status=status.HTTP_404_NOT_FOUND)
+
             return Response(serializer.initial_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        snippet = self.get_object(pk)
-        snippet.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        order_detail = self.get_object(pk)
+
+        OrderDetailSerializer.add_stock_prod(
+            order_detail.product_id,
+            order_detail.cuantity
+        )
+
+        order_detail.delete()
+
+        return Response({"msg": "Eliminado correctamente"}, status=status.HTTP_204_NO_CONTENT)
 
 

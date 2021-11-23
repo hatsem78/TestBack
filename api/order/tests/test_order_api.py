@@ -1,5 +1,4 @@
-import datetime
-from pprint import pprint
+import json
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
@@ -30,8 +29,8 @@ class OrderApiTests(TestCase):
             password='testpass',
             name='fname',
         )
-        date_one = datetime.datetime.strptime('2021-01-01', '%Y-%m-%d')
-        self.one = Order.objects.create(date_time=date_one)
+
+        self.one = Order.objects.create(date_time='2021-01-01')
         self.two = Order.objects.create(date_time='2021-01-01')
 
         self.client = APIClient()
@@ -54,18 +53,44 @@ class OrderApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
     def test_update_order_success(self):
-
         payload = {
             "date_time": "2021-01-03"
         }
 
-        response = self.client.put("http://0.0.0.0:8010/api/order/update/1/", payload, format='json')
+        base_url = reverse(
+            "order:update",
+            kwargs={'pk': self.one.pk}
+        )
+
+        response = self.client.put(base_url, payload, format='json')
 
         self.assertEqual("2021-01-03", response.data['date_time'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_order_delete(self):
-        response = self.client.delete("http://0.0.0.0:8010/api/order/update/" +
-                                      str(self.two.pk) + "/")
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    def test_update_order_not_found(self):
+        """Test creating using with a valid payload not found"""
+        payload = {
+            "date_time": "2021-01-03"
+        }
 
+        base_url = reverse(
+            "order:update",
+            kwargs={'pk': 50}
+        )
+
+        response = self.client.put(base_url, payload, format='json')
+
+        resp = json.loads(response.content)
+
+        self.assertEqual(resp["detail"], 'Not found.')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_order_delete(self):
+        base_url = reverse(
+            "order:delete",
+            kwargs={'pk': self.two.pk}
+        )
+
+        response = self.client.delete(base_url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

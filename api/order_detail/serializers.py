@@ -12,8 +12,6 @@ class OrderDetailPagSerializer(serializers.Serializer, ):
         fields = ('id', "order", 'product_name', "product_price", 'cuantity')
 
     id = serializers.IntegerField(read_only=True)
-    order_id = serializers.IntegerField()
-    product_id = serializers.IntegerField()
     cuantity = serializers.IntegerField()
     product_name = serializers.CharField(max_length=200, allow_blank=True)
     product_price = serializers.FloatField()

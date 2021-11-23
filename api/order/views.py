@@ -66,9 +66,9 @@ class OrderDetails(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        snippet = self.get_object(pk)
-        serializer = OrderSerializer(snippet)
-        result = self._getInstance(snippet)
+        order = self.get_object(pk)
+
+        result = self._getInstance(order)
         order_detail = OrderDetail.objects.filter(order=pk)
 
         result["product"] = order_detail.values("cuantity", "product_id__name", "product_id__price")

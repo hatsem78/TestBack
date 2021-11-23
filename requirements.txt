@@ -3,7 +3,6 @@ djangorestframework
 psycopg2
 pycryptodomex
 pycrypto
-import
 requests
 flake8>=3.6.0
 

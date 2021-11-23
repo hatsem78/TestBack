@@ -231,18 +231,28 @@ def get_total_dolar(pk):
 
 
 def get_check_stock(pk):
-    prod = Product.objects.filter(id=int(pk)).values()
+    try:
+        prod = Product.objects.get(id=int(pk))
 
-    stock = prod[0]["stock"]
+    except Product.DoesNotExist:
+        from django.http import Http404
+        raise Http404
+
+    stock = prod.stock
 
     flag = True if stock > 0 else False
 
-    return flag
+    return flag, stock
 
 
 def get_check_product_in_order(id_product):
 
-    order = OrderDetail.objects.filter(product=id_product)
+    try:
+        order = OrderDetail.objects.filter(product=id_product)
+
+    except Product.DoesNotExist:
+        from django.http import Http404
+        raise Http404
 
     return True if len(order) > 0 else False
 

@@ -19,8 +19,8 @@ class ProductAdd(APIView):
     permission_classes = (IsAuthenticated, JSONWebTokenAuthentication)
 
     def get(self, request, format=None):
-        snippets = Product.objects.all()
-        serializer = ProductPagSerializer(snippets, many=True)
+        product = Product.objects.all()
+        serializer = ProductPagSerializer(product, many=True)
         return Response(serializer.data)
 
     def post(self, request, format=None):
@@ -44,15 +44,17 @@ class ProductDetail(APIView):
         """
             Update and return an existing `Product` instance, given the validated data.
         """
-        instance = {}
-        instance['id'] = validated_data.id
-        instance['name'] = validated_data.name
-        instance['price'] = validated_data.price
-        instance['stock'] = validated_data.stock
+        instance = {
+            'id': validated_data.id,
+            'name': validated_data.name,
+            'price': validated_data.price,
+            'stock': validated_data.stock
+        }
 
         return instance
 
-    def get_object(self, pk):
+    @staticmethod
+    def get_object(pk):
         try:
             object = Product.objects.get(pk=pk)
             return object
@@ -61,17 +63,17 @@ class ProductDetail(APIView):
             raise Http404
 
     def get(self, request, pk, format=None):
-        snippet = self.get_object(pk)
-        serializer = ProductSerializer(snippet)
-        result = self._getInstance(snippet)
+        product = self.get_object(pk)
+
+        result = self._getInstance(product)
 
         return Response(result)
 
     def put(self, request, pk, format=None):
 
-        object = self.get_object(pk)
+        product = self.get_object(pk)
 
-        serializer = ProductSerializer(object, data=request.data)
+        serializer = ProductSerializer(product, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
@@ -79,6 +81,6 @@ class ProductDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
-        snippet = self.get_object(pk)
-        snippet.delete()
+        product = self.get_object(pk)
+        product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
